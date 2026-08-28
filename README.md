@@ -13,6 +13,12 @@
   <code>https://quote-api.smklog.com/mcp</code> · streamable-http · MCP 2026-07-28, 2025-06-18, 2025-03-26
 </p>
 
+<p align="center">
+  <a href="https://smithery.ai/servers/smklog/parcel-shipping-rates"><img src="https://smithery.ai/badge/smklog/parcel-shipping-rates" alt="Listed on Smithery"></a>
+  <a href="https://registry.modelcontextprotocol.io/v0/servers?search=smklog"><img src="https://img.shields.io/badge/MCP%20registry-com.smklog%2Fparcel--shipping--rates-1f6feb" alt="In the official MCP registry"></a>
+  <a href="https://github.com/smklog/parcel-shipping-rates-mcp/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT license"></a>
+</p>
+
 ---
 
 Most shipping APIs want a box: length, width, height, weight. People don't have
@@ -84,6 +90,10 @@ adjustments. An agent cannot spend someone's money through this server.
 ```
 
 No key, no OAuth, no signup. Quoting, tracking and the price index are all open.
+
+Also installable from [Smithery](https://smithery.ai/servers/smklog/parcel-shipping-rates)
+and listed in the [official MCP registry](https://registry.modelcontextprotocol.io/v0/servers?search=smklog)
+as `com.smklog/parcel-shipping-rates`.
 
 Other ways in, if MCP is not your transport:
 [OpenAPI](https://quote-api.smklog.com/openapi.json) ·
