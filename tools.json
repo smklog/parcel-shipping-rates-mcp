@@ -1,0 +1,463 @@
+{
+  "tools": [
+    {
+      "name": "get_parcel_quote",
+      "title": "Get live US parcel shipping rates",
+      "annotations": {
+        "title": "Get live US parcel shipping rates",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "description": "Live shipping rates for one US-domestic parcel across USPS, UPS and FedEx. Describe the item in plain words and the packed box size and weight are estimated; give exact dimensions and weight to skip the estimate. Returns up to five purchasable services with the checkout total, the carrier cost beneath it and the SMKlog fee stated separately. Oversized, palletized or crated shipments are priced by a person: clients that declare the io.modelcontextprotocol/tasks extension get a durable task handle (poll it with tasks/get, answers usually take a few business hours); others get a pointer to the human review page. Shipping labels are bought on smklog.com, not through this tool.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "product",
+          "from_zip",
+          "to_zip"
+        ],
+        "properties": {
+          "product": {
+            "type": "string",
+            "description": "Plain-words item description, e.g. \"65 inch flat screen TV in original box\""
+          },
+          "from_zip": {
+            "type": "string",
+            "description": "Origin 5-digit US ZIP"
+          },
+          "to_zip": {
+            "type": "string",
+            "description": "Destination 5-digit US ZIP"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 1,
+            "description": "How many identical parcels ship together. Defaults to 1."
+          },
+          "weight_lb": {
+            "type": "number",
+            "description": "Packed weight in pounds. Optional; estimated from the description when omitted."
+          },
+          "length_in": {
+            "type": "number",
+            "description": "Packed box length in inches. Supply all three dimensions AND weight_lb to skip the estimate."
+          },
+          "width_in": {
+            "type": "number",
+            "description": "Packed box width in inches."
+          },
+          "height_in": {
+            "type": "number",
+            "description": "Packed box height in inches."
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Live rates for the shipment. Empty rates with mode \"freight_manager\" means a person prices it.",
+        "required": [
+          "rates"
+        ],
+        "properties": {
+          "mode": {
+            "type": "string",
+            "description": "Quote mode; \"freight_manager\" routes to a human review"
+          },
+          "package": {
+            "type": "object",
+            "description": "The packed box the rates were computed for"
+          },
+          "rates": {
+            "type": "array",
+            "description": "Purchasable services, cheapest first",
+            "items": {
+              "type": "object",
+              "required": [
+                "carrier",
+                "service",
+                "amount"
+              ],
+              "properties": {
+                "carrier": {
+                  "type": "string",
+                  "description": "USPS, UPS or FedEx"
+                },
+                "service": {
+                  "type": "string",
+                  "description": "Service name without the carrier prefix"
+                },
+                "service_label": {
+                  "type": "string",
+                  "description": "Full display name, carrier included"
+                },
+                "amount": {
+                  "type": "number",
+                  "description": "Checkout total, USD"
+                },
+                "carrier_amount": {
+                  "type": "number",
+                  "description": "Negotiated carrier cost, USD"
+                },
+                "service_fee": {
+                  "type": "number",
+                  "description": "SMKlog fee, USD"
+                },
+                "retail_amount": {
+                  "type": "number",
+                  "description": "Carrier retail counter price, USD; 0 when not published"
+                },
+                "delivery_days": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "description": "Business days in transit when the carrier quotes one"
+                },
+                "delivery_window": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "e.g. \"2-5 business days\""
+                },
+                "delivery_estimated_date": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Estimated delivery date when quoted"
+                },
+                "currency": {
+                  "type": "string",
+                  "description": "ISO currency, USD"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "create_checkout_link",
+      "title": "Create a payment session for a shipping label",
+      "annotations": {
+        "title": "Create a payment session for a shipping label",
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "description": "Prices the shipment live and returns a payment session for buying the shipping label: the amount, and a handoff URL that opens the SMKlog checkout prefilled with this shipment. The human confirms the contents certification and the carrier-adjustment consent there and pays on Stripe hosted checkout. This tool never charges anything itself \u2014 MPP intent \"session\", not \"charge\".",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "product",
+          "from_zip",
+          "to_zip"
+        ],
+        "properties": {
+          "product": {
+            "type": "string",
+            "description": "Plain-words item description"
+          },
+          "from_zip": {
+            "type": "string",
+            "description": "Origin 5-digit US ZIP"
+          },
+          "to_zip": {
+            "type": "string",
+            "description": "Destination 5-digit US ZIP"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 1,
+            "description": "How many identical parcels ship together. Defaults to 1."
+          },
+          "service": {
+            "type": "string",
+            "description": "Optional service to anchor the amount, e.g. \"USPS Ground Advantage\". Cheapest when omitted; the human can still pick any service on the page."
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "A payment session, not a charge: the amount and the handoff URL where the human pays.",
+        "required": [
+          "intent",
+          "amount",
+          "currency",
+          "handoff_url"
+        ],
+        "properties": {
+          "intent": {
+            "type": "string",
+            "description": "Always \"session\" \u2014 this tool never charges"
+          },
+          "method": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Payment rails behind the checkout, e.g. stripe, card"
+          },
+          "amount": {
+            "type": "number",
+            "description": "Live-quoted checkout total for the anchored service, USD"
+          },
+          "currency": {
+            "type": "string",
+            "description": "ISO currency, USD"
+          },
+          "service": {
+            "type": "string",
+            "description": "The service the amount is anchored to"
+          },
+          "handoff_url": {
+            "type": "string",
+            "description": "Opens the SMKlog checkout prefilled with this shipment"
+          },
+          "identified_product_title": {
+            "type": "string",
+            "description": "What the estimator understood the item to be"
+          },
+          "note": {
+            "type": "string",
+            "description": "Standing caveats: live quote, human confirms consents and pays"
+          }
+        }
+      }
+    },
+    {
+      "name": "track_parcel",
+      "title": "Track a SMKlog shipment",
+      "annotations": {
+        "title": "Track a SMKlog shipment",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "description": "Track a shipment whose shipping label was bought on smklog.com, by carrier tracking number. Returns the current delivery status, the latest scan events and the estimated delivery date when the carrier reports one. Works for SMKlog labels only \u2014 it is not a universal tracker for arbitrary USPS, UPS or FedEx numbers.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "tracking_number"
+        ],
+        "properties": {
+          "tracking_number": {
+            "type": "string",
+            "description": "Carrier tracking number from the SMKlog receipt or label page"
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Current delivery status plus the scan timeline, newest first.",
+        "required": [
+          "tracking",
+          "events"
+        ],
+        "properties": {
+          "tracking": {
+            "type": "object",
+            "required": [
+              "tracking_code",
+              "status"
+            ],
+            "properties": {
+              "tracking_code": {
+                "type": "string",
+                "description": "The carrier tracking number"
+              },
+              "carrier": {
+                "type": "string",
+                "description": "USPS, UPS or FedEx"
+              },
+              "status": {
+                "type": "string",
+                "description": "Machine status, e.g. in_transit, delivered"
+              },
+              "status_label": {
+                "type": "string",
+                "description": "Human-readable status"
+              },
+              "status_detail": {
+                "type": "string",
+                "description": "Carrier detail when reported"
+              },
+              "last_event_at": {
+                "type": "string",
+                "description": "Timestamp of the latest scan"
+              },
+              "estimated_delivery": {
+                "type": "string",
+                "description": "Estimated delivery date when the carrier reports one"
+              },
+              "delivered_at": {
+                "type": "string",
+                "description": "Delivery timestamp once delivered"
+              },
+              "updated_at": {
+                "type": "string",
+                "description": "When this record last changed"
+              }
+            }
+          },
+          "events": {
+            "type": "array",
+            "description": "Scan events, newest first, up to eight",
+            "items": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "description": "Machine status at this scan"
+                },
+                "status_label": {
+                  "type": "string",
+                  "description": "Human-readable status"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "What the carrier reported"
+                },
+                "datetime": {
+                  "type": "string",
+                  "description": "Scan timestamp"
+                },
+                "city": {
+                  "type": "string",
+                  "description": "Scan city"
+                },
+                "state": {
+                  "type": "string",
+                  "description": "Scan state"
+                },
+                "zip": {
+                  "type": "string",
+                  "description": "Scan ZIP"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "get_price_index",
+      "title": "US parcel shipping price index",
+      "annotations": {
+        "title": "US parcel shipping price index",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "The SMKlog parcel shipping price index: a monthly repriced basket of six common boxes (1 to 20 lb) shipped from Newark, NJ to five US cities, quoted through the same live USPS, UPS and FedEx pipeline that prices real shipments. Returns the cheapest purchasable service per box and lane with every rate behind it, plus basket averages. Reference data for questions like \"what does shipping a shoebox cost in the US right now\" \u2014 reading it spends no quote allowance. For a price on a specific shipment, call get_parcel_quote instead.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "month": {
+            "type": "string",
+            "description": "Issue month as YYYY-MM. Omit for the newest published issue."
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "One published issue of the index: the cheapest service per box and lane with every rate behind it.",
+        "required": [
+          "month",
+          "captured_on",
+          "cells"
+        ],
+        "properties": {
+          "month": {
+            "type": "string",
+            "description": "Issue month, YYYY-MM"
+          },
+          "label": {
+            "type": "string",
+            "description": "Issue month spelled out, e.g. \"August 2026\""
+          },
+          "captured_on": {
+            "type": "string",
+            "description": "The date every price in this issue was captured"
+          },
+          "origin": {
+            "type": "string",
+            "description": "Origin of every lane, Newark NJ (07102)"
+          },
+          "basket_average": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Mean of the cheapest rate across all thirty cells, USD"
+          },
+          "carrier_wins": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "How many cells each carrier priced cheapest"
+          },
+          "cells": {
+            "type": "array",
+            "description": "One entry per box and destination",
+            "items": {
+              "type": "object",
+              "required": [
+                "box",
+                "to",
+                "cheapest"
+              ],
+              "properties": {
+                "box": {
+                  "type": "string",
+                  "description": "Basket carton, e.g. \"Book box\""
+                },
+                "dims": {
+                  "type": "string",
+                  "description": "Packed dimensions, inches"
+                },
+                "weight": {
+                  "type": "string",
+                  "description": "Packed weight, pounds"
+                },
+                "to": {
+                  "type": "string",
+                  "description": "Destination city"
+                },
+                "to_zip": {
+                  "type": "string",
+                  "description": "Destination ZIP"
+                },
+                "cheapest": {
+                  "type": "object",
+                  "description": "The lowest-priced purchasable service for this cell"
+                },
+                "services": {
+                  "type": "array",
+                  "description": "Every purchasable service for this cell, cheapest first"
+                }
+              }
+            }
+          },
+          "page": {
+            "type": "string",
+            "description": "The published issue page on smklog.com"
+          },
+          "methodology": {
+            "type": "string",
+            "description": "How the numbers are produced"
+          }
+        }
+      }
+    }
+  ]
+}

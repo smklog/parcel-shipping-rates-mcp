@@ -1,0 +1,108 @@
+{
+  "serverInfo": {
+    "name": "smklog-quotes",
+    "title": "SMKlog Parcel Shipping Rates",
+    "version": "1.1.0",
+    "description": "Live USPS, UPS and FedEx shipping rates for a US parcel described in plain words. No scale, no account and no API key. Also tracks shipments bought on SMKlog and serves a monthly US parcel shipping price index.",
+    "websiteUrl": "https://smklog.com"
+  },
+  "name": "com.smklog/parcel-shipping-rates",
+  "title": "SMKlog Parcel Shipping Rates",
+  "version": "1.1.0",
+  "description": "Live USPS, UPS and FedEx shipping rates for a US parcel described in plain words. No scale needed.",
+  "websiteUrl": "https://smklog.com",
+  "transport": {
+    "type": "streamable-http",
+    "endpoint": "https://quote-api.smklog.com/mcp"
+  },
+  "capabilities": {
+    "tools": {
+      "listChanged": false
+    }
+  },
+  "protocolVersions": [
+    "2026-07-28",
+    "2025-06-18",
+    "2025-03-26"
+  ],
+  "authentication": {
+    "required": false,
+    "note": "No key and no account for quoting, tracking or the price index. Rate limited per client."
+  },
+  "keywords": [
+    "shipping",
+    "shipping rates",
+    "parcel",
+    "usps",
+    "ups",
+    "fedex",
+    "shipping label",
+    "package tracking",
+    "logistics",
+    "ecommerce"
+  ],
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "tools": [
+    {
+      "name": "get_parcel_quote",
+      "title": "Get live US parcel shipping rates",
+      "description": "Live shipping rates for one US-domestic parcel across USPS, UPS and FedEx. Describe the item in plain words and the packed box size and weight are estimated; give exact dimensions and weight to skip the estimate. Returns up to five purchasable services with the checkout total, the carrier cost beneath it and the SMKlog fee stated separately. Oversized, palletized or crated shipments are priced by a person: clients that declare the io.modelcontextprotocol/tasks extension get a durable task handle (poll it with tasks/get, answers usually take a few business hours); others get a pointer to the human review page. Shipping labels are bought on smklog.com, not through this tool.",
+      "annotations": {
+        "title": "Get live US parcel shipping rates",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "create_checkout_link",
+      "title": "Create a payment session for a shipping label",
+      "description": "Prices the shipment live and returns a payment session for buying the shipping label: the amount, and a handoff URL that opens the SMKlog checkout prefilled with this shipment. The human confirms the contents certification and the carrier-adjustment consent there and pays on Stripe hosted checkout. This tool never charges anything itself \u2014 MPP intent \"session\", not \"charge\".",
+      "annotations": {
+        "title": "Create a payment session for a shipping label",
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "track_parcel",
+      "title": "Track a SMKlog shipment",
+      "description": "Track a shipment whose shipping label was bought on smklog.com, by carrier tracking number. Returns the current delivery status, the latest scan events and the estimated delivery date when the carrier reports one. Works for SMKlog labels only \u2014 it is not a universal tracker for arbitrary USPS, UPS or FedEx numbers.",
+      "annotations": {
+        "title": "Track a SMKlog shipment",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "get_price_index",
+      "title": "US parcel shipping price index",
+      "description": "The SMKlog parcel shipping price index: a monthly repriced basket of six common boxes (1 to 20 lb) shipped from Newark, NJ to five US cities, quoted through the same live USPS, UPS and FedEx pipeline that prices real shipments. Returns the cheapest purchasable service per box and lane with every rate behind it, plus basket averages. Reference data for questions like \"what does shipping a shoebox cost in the US right now\" \u2014 reading it spends no quote allowance. For a price on a specific shipment, call get_parcel_quote instead.",
+      "annotations": {
+        "title": "US parcel shipping price index",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    }
+  ],
+  "icons": [
+    {
+      "src": "https://smklog.com/assets/favicon.svg",
+      "mimeType": "image/svg+xml"
+    }
+  ],
+  "registry": "https://registry.modelcontextprotocol.io/v0/servers?search=smklog",
+  "documentation": "https://smklog.com/api",
+  "openapi": "https://quote-api.smklog.com/openapi.json"
+}
