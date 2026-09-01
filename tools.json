@@ -2,15 +2,15 @@
   "tools": [
     {
       "name": "get_parcel_quote",
-      "title": "Get live US parcel shipping rates",
+      "title": "Get live parcel shipping rates from a US origin",
       "annotations": {
-        "title": "Get live US parcel shipping rates",
+        "title": "Get live parcel shipping rates from a US origin",
         "readOnlyHint": true,
         "destructiveHint": false,
         "idempotentHint": false,
         "openWorldHint": true
       },
-      "description": "Live shipping rates for one parcel sent from a US origin — inside the US, or to Canada, the UK, Germany or Australia — across USPS, UPS and FedEx. Describe the item in plain words and the packed box size and weight are estimated; give exact dimensions and weight to skip the estimate. Returns up to five purchasable services with the checkout total, the carrier cost beneath it and the SMKlog fee stated separately. Oversized, palletized or crated shipments are priced by a person: clients that declare the io.modelcontextprotocol/tasks extension get a durable task handle (poll it with tasks/get, answers usually take a few business hours); others get a pointer to the human review page. Shipping labels are bought on smklog.com, not through this tool. Choosing between the tools: use this one to answer what a shipment would cost, then hand the quote_id it returns to create_checkout_link once the human has settled on shipping this exact parcel -- that pairing costs one carrier call rather than two. Use get_price_index instead for typical or historical prices, because it is free while this tool spends a rate-limited carrier call every time.",
+      "description": "Live shipping rates for one parcel sent from a US origin — inside the US, or to Canada, the UK, Germany or Australia — across USPS, UPS and FedEx. Describe the item in plain words and the packed box size and weight are estimated; give exact dimensions and weight to skip the estimate. Returns up to five purchasable services with the checkout total, the carrier cost beneath it and the SMKlog fee stated separately. Oversized, palletized or crated shipments are priced by a person: clients that declare the io.modelcontextprotocol/tasks extension get a durable task handle (poll it with tasks/get, answers usually take a few business hours); others get a pointer to the human review page. Shipping labels are bought on smklog.com, not through this tool. Choosing between the tools: use this one to answer what a shipment would cost, then hand the quote_id it returns to create_checkout_link once the human has settled on shipping this exact parcel -- that pairing costs one carrier call rather than two. Use get_price_index instead for typical or historical prices, because it is free while this tool spends a rate-limited carrier call every time. Parameter rules: weight_lb, length_in, width_in and height_in count only as a set of four, each above zero; leave any one out and all four are ignored in favor of the estimate, so never send weight alone. Online pricing covers one parcel up to 150 lb, 108 in on the longest side and 165 in of length plus girth; a heavier or larger box, a quantity above 1, or a product worded as freight (pallet, LTL, truckload, machinery, bulk) returns no rates and goes to a person. product is the item itself, up to 200 characters; a bare route (\"to Canada\"), a bare weight (\"7 lbs\") or a question is refused as product_not_recognized before any carrier is called. from_zip must be a real 5-digit US ZIP (ZIP+4 is trimmed to five) or the call fails with invalid_us_zip. to_zip follows to_country: a 5-digit ZIP for US, otherwise that country's own postal code handed to the carriers as typed; a to_country outside US, CA, GB, DE and AU is refused as international_unsupported_online, so do not retry it with a different box. Allowance: 80 calls an hour per client, shared with the public /quote route.",
       "inputSchema": {
         "type": "object",
         "required": [
@@ -21,42 +21,53 @@
         "properties": {
           "product": {
             "type": "string",
-            "description": "Plain-words item description, e.g. \"65 inch flat screen TV in original box\""
+            "description": "Plain-words item description, e.g. \"65 inch flat screen TV in original box\"."
           },
           "from_zip": {
             "type": "string",
-            "description": "Origin 5-digit US ZIP. The origin is always in the United States; there is no lane that starts abroad."
+            "description": "Origin US ZIP code, 5 digits. The origin is always in the United States."
           },
           "to_zip": {
             "type": "string",
-            "description": "Destination postal code. A 5-digit ZIP when to_country is US or omitted; otherwise that country's own postal code, e.g. M5V 2T6 for Toronto or SW1A 1AA for London."
+            "description": "Destination postal code: a 5-digit ZIP for the US, or the destination country's own postal code, e.g. M5V 2T6 for Toronto or SW1A 1AA for London."
           },
           "to_country": {
             "type": "string",
+            "enum": [
+              "US",
+              "CA",
+              "GB",
+              "DE",
+              "AU"
+            ],
             "default": "US",
-            "description": "Two-letter destination country. Omit for a domestic shipment. Sold online: US, CA, GB, DE, AU. Any other country is refused with international_unsupported_online rather than priced, so do not retry it with a different box."
+            "description": "Two-letter destination country: US (default), CA, GB, DE, AU."
           },
           "quantity": {
             "type": "integer",
             "minimum": 1,
             "default": 1,
-            "description": "How many identical parcels ship together, priced as separate labels. Defaults to 1."
+            "description": "Identical parcels in this shipment. Default 1."
           },
           "weight_lb": {
             "type": "number",
-            "description": "Packed weight in pounds. Optional; estimated from the description when omitted."
+            "exclusiveMinimum": 0,
+            "description": "Packed weight, pounds. Decimals allowed."
           },
           "length_in": {
             "type": "number",
-            "description": "Packed box length in inches. Supply all three dimensions AND weight_lb to skip the estimate."
+            "exclusiveMinimum": 0,
+            "description": "Packed box length, inches."
           },
           "width_in": {
             "type": "number",
-            "description": "Packed box width in inches."
+            "exclusiveMinimum": 0,
+            "description": "Packed box width, inches."
           },
           "height_in": {
             "type": "number",
-            "description": "Packed box height in inches."
+            "exclusiveMinimum": 0,
+            "description": "Packed box height, inches."
           }
         }
       },
@@ -159,14 +170,14 @@
         "idempotentHint": false,
         "openWorldHint": true
       },
-      "description": "Prices the shipment live and returns a payment session for buying the shipping label: the amount, and a handoff URL that opens the SMKlog checkout prefilled with this shipment. The human confirms the contents certification and the carrier-adjustment consent there and pays on Stripe hosted checkout. This tool never charges anything itself — MPP intent \"session\", not \"charge\". The two pricing tools are meant to be used in order, not chosen between: call get_parcel_quote first to compare services, then pass the quote_id it returns to this tool, which then spends no second carrier call. Calling this one without a quote_id is supported and prices the shipment live -- fine when the parcel is already decided and you never quoted it. Side effect and limits, stated rather than left to the annotations: it writes a session record on our side, it is not idempotent, and calling it twice makes two sessions and spends two carrier calls. Nothing is reserved and no card is touched until the human pays, and the link simply reprices if it goes stale. It cannot complete a purchase on its own — the human confirms the contents certification and the carrier-adjustment consent on the page, and on the four international lanes fills in the customs declaration there too. A shipment our rules send to a person (freight, oversize, an installed lithium battery crossing a border) returns no session at all: quote it first if you want to know which case you are in.",
+      "description": "Turns a decided shipment into a payment session for buying its shipping label: the checkout amount and a handoff URL that opens SMKlog checkout prefilled with the parcel. Use it after get_parcel_quote, passing the quote_id that call returned, so the price is reused and no second carrier call is spent; without a quote_id it prices the shipment live from the fields. Side effects: it writes a session record and is not idempotent, so calling it twice makes two sessions and, without a quote_id, spends two carrier calls. It never charges: no card is touched and nothing is reserved until the human confirms the contents certification and the carrier-adjustment consent on the page and pays there; a stale link simply reprices. It returns no session when a person has to price the shipment (freight, oversize, a quantity above 1, an installed lithium battery crossing a border), so quote first to learn which case applies. Parameter rules: a valid quote_id overrides product, from_zip, to_zip, to_country and quantity, while service is still honored; an expired quote_id falls back to live pricing from the fields, and if those were omitted too the call fails with missing_required_fields, so pass them alongside an old id. service is matched as a case-insensitive fragment of the display name (\"Ground Advantage\", \"UPS Ground Saver\"); a fragment that matches nothing silently anchors the cheapest rate, so read the service field in the result. from_zip is a real 5-digit US ZIP; to_zip follows to_country (US, CA, GB, DE or AU), and on the four international lanes the human completes the customs declaration on the page while duty is billed to the recipient on arrival.",
       "inputSchema": {
         "type": "object",
         "required": [],
         "properties": {
           "quote_id": {
             "type": "string",
-            "description": "The quote_id returned by a previous get_parcel_quote call, valid for 15 minutes. Pass it and the shipment is taken from that quote, which spends no second carrier call; product, from_zip, to_zip and to_country are then ignored. Omit it and this tool prices the shipment live from the fields below. If the id has expired the tool prices live instead and says so with quote_reused false."
+            "description": "The quote_id returned by a previous get_parcel_quote call. Valid for 15 minutes."
           },
           "product": {
             "type": "string",
@@ -174,26 +185,33 @@
           },
           "from_zip": {
             "type": "string",
-            "description": "Origin 5-digit US ZIP. Required unless quote_id is given. The origin is always in the United States."
+            "description": "Origin US ZIP code, 5 digits. Required unless quote_id is given."
           },
           "to_zip": {
             "type": "string",
-            "description": "Destination postal code. A 5-digit ZIP when to_country is US or omitted; otherwise that country's own postal code."
+            "description": "Destination postal code: a 5-digit ZIP for the US, or the destination country's own postal code. Required unless quote_id is given."
           },
           "to_country": {
             "type": "string",
+            "enum": [
+              "US",
+              "CA",
+              "GB",
+              "DE",
+              "AU"
+            ],
             "default": "US",
-            "description": "Two-letter destination country. Omit for domestic. Sold online: US, CA, GB, DE, AU. On the four international lanes the human completes the customs declaration on the handoff page before paying, and duty is billed to the recipient on arrival (DDU) rather than added here."
+            "description": "Two-letter destination country: US (default), CA, GB, DE, AU."
           },
           "quantity": {
             "type": "integer",
             "minimum": 1,
             "default": 1,
-            "description": "How many identical parcels ship together, priced as separate labels. Defaults to 1."
+            "description": "Identical parcels in this shipment. Default 1."
           },
           "service": {
             "type": "string",
-            "description": "Optional service to anchor the amount, e.g. \"USPS Ground Advantage\". Cheapest when omitted; the human can still pick any service on the page."
+            "description": "Service to anchor the amount to, e.g. \"USPS Ground Advantage\". Cheapest when omitted; the human can still pick any service on the page."
           }
         }
       },
@@ -259,7 +277,7 @@
         "idempotentHint": true,
         "openWorldHint": true
       },
-      "description": "Track a shipment whose shipping label was bought on smklog.com, by carrier tracking number. Returns the current delivery status, the latest scan events and the estimated delivery date when the carrier reports one. Works for SMKlog labels only — it is not a universal tracker for arbitrary USPS, UPS or FedEx numbers, so a number from any other seller comes back not-found rather than as a status. Unrelated to the two pricing tools: it neither quotes nor spends quote allowance.",
+      "description": "Track a shipment whose shipping label was bought on smklog.com, by carrier tracking number. Returns the current delivery status, the latest scan events and the estimated delivery date when the carrier reports one. Works for SMKlog labels only — it is not a universal tracker for arbitrary USPS, UPS or FedEx numbers, so a number from any other seller comes back not-found rather than as a status. Unrelated to the two pricing tools: it neither quotes nor spends quote allowance. Parameter rules: tracking_number is the only key; no order id or email is needed or accepted. It is matched after removing spaces and hyphens and ignoring case, so a pasted or spoken number works as-is. Expect USPS as 20 to 22 digits (13 characters ending in US for international), UPS as 1Z plus 16 characters, FedEx as 12 to 22 digits; anything shorter than 6 characters after cleanup is refused as tracking_number_required, and a number SMKlog never sold answers 404 tracking_not_found with status \"not_found\". Scan events come newest first, up to eight.",
       "inputSchema": {
         "type": "object",
         "required": [
@@ -375,7 +393,7 @@
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "description": "The SMKlog parcel shipping price index: a monthly repriced basket of six common boxes (1 to 20 lb) shipped from Newark, NJ to five US cities, quoted through the same live USPS, UPS and FedEx pipeline that prices real shipments. Returns the cheapest purchasable service per box and lane with every rate behind it, plus basket averages. Reference data for questions like \"what does shipping a shoebox cost in the US right now\" — reading it spends no quote allowance. For a price on a specific shipment, call get_parcel_quote instead.",
+      "description": "The SMKlog parcel shipping price index: a monthly repriced basket of six common boxes (1 to 20 lb) shipped from Newark, NJ to five US cities, quoted through the same live USPS, UPS and FedEx pipeline that prices real shipments. Returns the cheapest purchasable service per box and lane with every rate behind it, plus basket averages. Reference data for questions like \"what does shipping a shoebox cost in the US right now\" — reading it spends no quote allowance. For a price on a specific shipment, call get_parcel_quote instead. Parameter rules: month names one published issue as YYYY-MM; issues exist from 2026-07 onward, one per month, and omitting month returns the newest. A month with no issue answers issue_not_found together with available_months, so one miss lists every valid value; anything not shaped YYYY-MM answers invalid_month. Every issue prices the same boxes and lanes, so two months compare cell for cell.",
       "inputSchema": {
         "type": "object",
         "properties": {
