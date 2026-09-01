@@ -10,7 +10,7 @@
         "idempotentHint": false,
         "openWorldHint": true
       },
-      "description": "Live shipping rates for one parcel sent from a US origin — inside the US, or to Canada, the UK, Germany or Australia — across USPS, UPS and FedEx. Describe the item in plain words and the packed box size and weight are estimated; give exact dimensions and weight to skip the estimate. Returns up to five purchasable services with the checkout total, the carrier cost beneath it and the SMKlog fee stated separately. Oversized, palletized or crated shipments are priced by a person: clients that declare the io.modelcontextprotocol/tasks extension get a durable task handle (poll it with tasks/get, answers usually take a few business hours); others get a pointer to the human review page. Shipping labels are bought on smklog.com, not through this tool. Choosing between the tools: use this one to answer what a shipment would cost; use create_checkout_link only once the human has settled on shipping this exact parcel, since it opens a payment page; use get_price_index instead for typical or historical prices, because it is free while this tool spends a rate-limited carrier call every time.",
+      "description": "Live shipping rates for one parcel sent from a US origin — inside the US, or to Canada, the UK, Germany or Australia — across USPS, UPS and FedEx. Describe the item in plain words and the packed box size and weight are estimated; give exact dimensions and weight to skip the estimate. Returns up to five purchasable services with the checkout total, the carrier cost beneath it and the SMKlog fee stated separately. Oversized, palletized or crated shipments are priced by a person: clients that declare the io.modelcontextprotocol/tasks extension get a durable task handle (poll it with tasks/get, answers usually take a few business hours); others get a pointer to the human review page. Shipping labels are bought on smklog.com, not through this tool. Choosing between the tools: use this one to answer what a shipment would cost, then hand the quote_id it returns to create_checkout_link once the human has settled on shipping this exact parcel -- that pairing costs one carrier call rather than two. Use get_price_index instead for typical or historical prices, because it is free while this tool spends a rate-limited carrier call every time.",
       "inputSchema": {
         "type": "object",
         "required": [
@@ -67,6 +67,10 @@
           "rates"
         ],
         "properties": {
+          "quote_id": {
+            "type": "string",
+            "description": "Handle to this quote, good for 15 minutes. Pass it to create_checkout_link as quote_id and that call spends no second carrier call. Null when no rate came back, or when the handle could not be stored."
+          },
           "mode": {
             "type": "string",
             "description": "Quote mode; \"freight_manager\" routes to a human review"
@@ -155,22 +159,22 @@
         "idempotentHint": false,
         "openWorldHint": true
       },
-      "description": "Prices the shipment live and returns a payment session for buying the shipping label: the amount, and a handoff URL that opens the SMKlog checkout prefilled with this shipment. The human confirms the contents certification and the carrier-adjustment consent there and pays on Stripe hosted checkout. This tool never charges anything itself — MPP intent \"session\", not \"charge\". Prefer get_parcel_quote while the human is still comparing options: this tool prices the shipment live as well, so calling both for one parcel spends two carrier calls and returns the same number twice. Reach for it only when the parcel is decided and the next step is paying. Side effect and limits, stated rather than left to the annotations: it writes a session record on our side, it is not idempotent, and calling it twice makes two sessions and spends two carrier calls. Nothing is reserved and no card is touched until the human pays, and the link simply reprices if it goes stale. It cannot complete a purchase on its own — the human confirms the contents certification and the carrier-adjustment consent on the page, and on the four international lanes fills in the customs declaration there too. A shipment our rules send to a person (freight, oversize, an installed lithium battery crossing a border) returns no session at all: quote it first if you want to know which case you are in.",
+      "description": "Prices the shipment live and returns a payment session for buying the shipping label: the amount, and a handoff URL that opens the SMKlog checkout prefilled with this shipment. The human confirms the contents certification and the carrier-adjustment consent there and pays on Stripe hosted checkout. This tool never charges anything itself — MPP intent \"session\", not \"charge\". The two pricing tools are meant to be used in order, not chosen between: call get_parcel_quote first to compare services, then pass the quote_id it returns to this tool, which then spends no second carrier call. Calling this one without a quote_id is supported and prices the shipment live -- fine when the parcel is already decided and you never quoted it. Side effect and limits, stated rather than left to the annotations: it writes a session record on our side, it is not idempotent, and calling it twice makes two sessions and spends two carrier calls. Nothing is reserved and no card is touched until the human pays, and the link simply reprices if it goes stale. It cannot complete a purchase on its own — the human confirms the contents certification and the carrier-adjustment consent on the page, and on the four international lanes fills in the customs declaration there too. A shipment our rules send to a person (freight, oversize, an installed lithium battery crossing a border) returns no session at all: quote it first if you want to know which case you are in.",
       "inputSchema": {
         "type": "object",
-        "required": [
-          "product",
-          "from_zip",
-          "to_zip"
-        ],
+        "required": [],
         "properties": {
+          "quote_id": {
+            "type": "string",
+            "description": "The quote_id returned by a previous get_parcel_quote call, valid for 15 minutes. Pass it and the shipment is taken from that quote, which spends no second carrier call; product, from_zip, to_zip and to_country are then ignored. Omit it and this tool prices the shipment live from the fields below. If the id has expired the tool prices live instead and says so with quote_reused false."
+          },
           "product": {
             "type": "string",
-            "description": "Plain-words item description"
+            "description": "Plain-words item description. Required unless quote_id is given."
           },
           "from_zip": {
             "type": "string",
-            "description": "Origin 5-digit US ZIP. The origin is always in the United States."
+            "description": "Origin 5-digit US ZIP. Required unless quote_id is given. The origin is always in the United States."
           },
           "to_zip": {
             "type": "string",
@@ -233,6 +237,10 @@
           "identified_product_title": {
             "type": "string",
             "description": "What the estimator understood the item to be"
+          },
+          "quote_reused": {
+            "type": "boolean",
+            "description": "True when the amount came from a quote_id you supplied, so no carrier call was spent. False when this tool priced the shipment live -- either because no quote_id was given, or because the one given had expired."
           },
           "note": {
             "type": "string",
