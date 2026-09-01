@@ -37,6 +37,7 @@ side, so you can always show a person both numbers.
 - *"Compare USPS, UPS and FedEx for a 5 lb box, Newark to Chicago — which is cheapest and which is fastest?"*
 - *"Price a 24 × 18 × 12 in box at 22 lb going to 33101, then give me a link to buy the label."*
 - *"Where is my package? Tracking 9400111899561234567890."*
+- *"Did they pay for that label yet? Here is the session id you gave me."*
 - *"What has a 5 lb box to Denver cost over the last few months?"*
 - *"I have a pallet of ceramic tile going from Hoboken to Miami — can you get me a quote?"*
 
@@ -49,7 +50,8 @@ when you poll it.
 | Tool | What it does |
 |---|---|
 | **`get_parcel_quote`** | Live rates for one parcel from a US origin, domestic or to Canada, the UK, Germany or Australia, across USPS, UPS and FedEx. Plain-words description → estimated packed box; or pass exact dimensions and weight to skip the estimate. Returns up to five purchasable services with the checkout total, the carrier cost beneath it, and the delivery window. |
-| **`create_checkout_link`** | Prices the shipment and returns a payment session: the amount, and a handoff URL that opens the SMKlog checkout prefilled with this shipment. The human confirms the contents certification and the carrier-adjustment consent there and pays on Stripe. |
+| **`create_checkout_link`** | Prices the shipment and returns a payment session: the amount, a handoff URL that opens the SMKlog checkout prefilled with this shipment, and a `session_id`. The human confirms the contents certification and the carrier-adjustment consent there and pays on Stripe. |
+| **`get_checkout_status`** | Where a payment session stands: `awaiting_checkout`, `checkout_started`, `paid`, `label_ready` (with the tracking number), `delivered` or `refunded`. Read from the order record, so it costs no carrier call and never carries names, addresses or emails. Sessions answer for 30 days. |
 | **`track_parcel`** | Delivery status, scan events and the carrier's estimated delivery date for a shipment whose label was bought on smklog.com. Not a universal tracker for arbitrary numbers. |
 | **`get_price_index`** | The monthly SMKlog parcel price index: six common boxes (1–20 lb) from Newark, NJ to five US cities, repriced through the same live pipeline that prices real shipments. Reading it spends no quote allowance. |
 
