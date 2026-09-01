@@ -2,14 +2,30 @@
   "serverInfo": {
     "name": "smklog-quotes",
     "title": "SMKlog Parcel Shipping Rates",
-    "version": "1.1.0",
-    "description": "Live USPS, UPS and FedEx shipping rates for a US parcel described in plain words. No scale, no account and no API key. Also tracks shipments bought on SMKlog and serves a monthly US parcel shipping price index.",
-    "websiteUrl": "https://smklog.com"
+    "version": "1.3.0",
+    "description": "Live USPS, UPS and FedEx shipping rates for a parcel sent from a US address — inside the US, or to Canada, the UK, Germany or Australia — described in plain words. No scale, no account and no API key. Also tracks shipments bought on SMKlog and serves a monthly US parcel shipping price index.",
+    "websiteUrl": "https://smklog.com",
+    "icons": [
+      {
+        "src": "https://smklog.com/assets/icon-512.png",
+        "mimeType": "image/png",
+        "sizes": [
+          "512x512"
+        ]
+      },
+      {
+        "src": "https://smklog.com/assets/favicon.svg",
+        "mimeType": "image/svg+xml",
+        "sizes": [
+          "any"
+        ]
+      }
+    ]
   },
   "name": "com.smklog/parcel-shipping-rates",
   "title": "SMKlog Parcel Shipping Rates",
-  "version": "1.1.0",
-  "description": "Live USPS, UPS and FedEx shipping rates for a US parcel described in plain words. No scale needed.",
+  "version": "1.3.0",
+  "description": "Live USPS, UPS and FedEx shipping rates for a parcel sent from the US — domestic, or to Canada, the UK, Germany or Australia. Described in plain words, no scale needed.",
   "websiteUrl": "https://smklog.com",
   "transport": {
     "type": "streamable-http",
@@ -62,7 +78,7 @@
     {
       "name": "create_checkout_link",
       "title": "Create a payment session for a shipping label",
-      "description": "Prices the shipment live and returns a payment session for buying the shipping label: the amount, and a handoff URL that opens the SMKlog checkout prefilled with this shipment. The human confirms the contents certification and the carrier-adjustment consent there and pays on Stripe hosted checkout. This tool never charges anything itself \u2014 MPP intent \"session\", not \"charge\".",
+      "description": "Prices the shipment live and returns a payment session for buying the shipping label: the amount, and a handoff URL that opens the SMKlog checkout prefilled with this shipment. The human confirms the contents certification and the carrier-adjustment consent there and pays on Stripe hosted checkout. This tool never charges anything itself — MPP intent \"session\", not \"charge\".",
       "annotations": {
         "title": "Create a payment session for a shipping label",
         "readOnlyHint": false,
@@ -74,7 +90,7 @@
     {
       "name": "track_parcel",
       "title": "Track a SMKlog shipment",
-      "description": "Track a shipment whose shipping label was bought on smklog.com, by carrier tracking number. Returns the current delivery status, the latest scan events and the estimated delivery date when the carrier reports one. Works for SMKlog labels only \u2014 it is not a universal tracker for arbitrary USPS, UPS or FedEx numbers.",
+      "description": "Track a shipment whose shipping label was bought on smklog.com, by carrier tracking number. Returns the current delivery status, the latest scan events and the estimated delivery date when the carrier reports one. Works for SMKlog labels only — it is not a universal tracker for arbitrary USPS, UPS or FedEx numbers.",
       "annotations": {
         "title": "Track a SMKlog shipment",
         "readOnlyHint": true,
@@ -86,7 +102,7 @@
     {
       "name": "get_price_index",
       "title": "US parcel shipping price index",
-      "description": "The SMKlog parcel shipping price index: a monthly repriced basket of six common boxes (1 to 20 lb) shipped from Newark, NJ to five US cities, quoted through the same live USPS, UPS and FedEx pipeline that prices real shipments. Returns the cheapest purchasable service per box and lane with every rate behind it, plus basket averages. Reference data for questions like \"what does shipping a shoebox cost in the US right now\" \u2014 reading it spends no quote allowance. For a price on a specific shipment, call get_parcel_quote instead.",
+      "description": "The SMKlog parcel shipping price index: a monthly repriced basket of six common boxes (1 to 20 lb) shipped from Newark, NJ to five US cities, quoted through the same live USPS, UPS and FedEx pipeline that prices real shipments. Returns the cheapest purchasable service per box and lane with every rate behind it, plus basket averages. Reference data for questions like \"what does shipping a shoebox cost in the US right now\" — reading it spends no quote allowance. For a price on a specific shipment, call get_parcel_quote instead.",
       "annotations": {
         "title": "US parcel shipping price index",
         "readOnlyHint": true,
@@ -98,11 +114,25 @@
   ],
   "icons": [
     {
+      "src": "https://smklog.com/assets/icon-512.png",
+      "mimeType": "image/png",
+      "sizes": [
+        "512x512"
+      ]
+    },
+    {
       "src": "https://smklog.com/assets/favicon.svg",
-      "mimeType": "image/svg+xml"
+      "mimeType": "image/svg+xml",
+      "sizes": [
+        "any"
+      ]
     }
   ],
   "registry": "https://registry.modelcontextprotocol.io/v0/servers?search=smklog",
   "documentation": "https://smklog.com/api",
-  "openapi": "https://quote-api.smklog.com/openapi.json"
+  "openapi": "https://quote-api.smklog.com/openapi.json",
+  "repository": {
+    "url": "https://github.com/smklog/parcel-shipping-rates-mcp",
+    "source": "github"
+  }
 }
