@@ -5,7 +5,7 @@
 <h1 align="center">SMKlog Parcel Shipping Rates — MCP Server</h1>
 
 <p align="center">
-  Live USPS, UPS and FedEx rates for a US parcel described in plain words.<br>
+  Live USPS, UPS and FedEx rates for a parcel sent from the US &mdash; domestic, or to Canada, the UK, Germany or Australia &mdash; described in plain words.<br>
   No scale. No account. No API key.
 </p>
 
@@ -48,7 +48,7 @@ when you poll it.
 
 | Tool | What it does |
 |---|---|
-| **`get_parcel_quote`** | Live rates for one US-domestic parcel across USPS, UPS and FedEx. Plain-words description → estimated packed box; or pass exact dimensions and weight to skip the estimate. Returns up to five purchasable services with the checkout total, the carrier cost beneath it, and the delivery window. |
+| **`get_parcel_quote`** | Live rates for one parcel from a US origin, domestic or to Canada, the UK, Germany or Australia, across USPS, UPS and FedEx. Plain-words description → estimated packed box; or pass exact dimensions and weight to skip the estimate. Returns up to five purchasable services with the checkout total, the carrier cost beneath it, and the delivery window. |
 | **`create_checkout_link`** | Prices the shipment and returns a payment session: the amount, and a handoff URL that opens the SMKlog checkout prefilled with this shipment. The human confirms the contents certification and the carrier-adjustment consent there and pays on Stripe. |
 | **`track_parcel`** | Delivery status, scan events and the carrier's estimated delivery date for a shipment whose label was bought on smklog.com. Not a universal tracker for arbitrary numbers. |
 | **`get_price_index`** | The monthly SMKlog parcel price index: six common boxes (1–20 lb) from Newark, NJ to five US cities, repriced through the same live pipeline that prices real shipments. Reading it spends no quote allowance. |
