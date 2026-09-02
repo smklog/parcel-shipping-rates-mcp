@@ -15,6 +15,14 @@
 // so a client can still see what the server offers. Tool calls need the
 // network and report an error instead.
 //
+// Streamable HTTP is not just the body: MCP 2026-07-28 has each request
+// declare its protocol version in params._meta and mirror that envelope into
+// HTTP headers, so a gateway can route without parsing JSON. A server may
+// reject a mismatch, and ours does (-32020). The bridge therefore derives
+// MCP-Protocol-Version, Mcp-Method and Mcp-Name from the message it is about
+// to send, and on the legacy path remembers the version initialize negotiated
+// and sends it on every later request.
+//
 // Environment:
 //   SMKLOG_MCP_URL         endpoint (default https://quote-api.smklog.com/mcp)
 //   SMKLOG_MCP_TIMEOUT_MS  per-request timeout (default 90000 — a quote is a
@@ -31,6 +39,8 @@ const ENDPOINT = process.env.SMKLOG_MCP_URL || 'https://quote-api.smklog.com/mcp
 const TIMEOUT_MS = Math.max(1000, Number(process.env.SMKLOG_MCP_TIMEOUT_MS) || 90000);
 const DEBUG = process.env.SMKLOG_MCP_DEBUG === '1';
 const LEGACY_VERSIONS = ['2025-06-18', '2025-03-26'];
+const META_PROTOCOL_VERSION = 'io.modelcontextprotocol/protocolVersion';
+const MODERN_VERSION = '2026-07-28';
 
 const log = (...parts) => { if (DEBUG) process.stderr.write(`[smklog-mcp] ${parts.join(' ')}\n`); };
 
@@ -72,10 +82,54 @@ function offlineAnswer(message, reason) {
     if (!tools || !Array.isArray(tools.tools)) return null;
     return { jsonrpc: '2.0', id, result: { tools: tools.tools } };
   }
+  if (method === 'server/discover') {
+    const init = snapshot('initialize.json');
+    const tools = snapshot('tools.json');
+    if (!init || !tools) return null;
+    return { jsonrpc: '2.0', id, result: {
+      supportedVersions: [MODERN_VERSION],
+      capabilities: init.capabilities,
+      instructions: init.instructions
+    } };
+  }
   if (method === 'resources/list') return { jsonrpc: '2.0', id, result: { resources: [] } };
   if (method === 'prompts/list') return { jsonrpc: '2.0', id, result: { prompts: [] } };
   if (method === 'ping') return { jsonrpc: '2.0', id, result: {} };
   return rpcError(id, -32000, `The SMKlog endpoint could not be reached (${reason}); ${method} needs the network.`);
+}
+
+// The version initialize negotiated, for the legacy era. 2026-07-28 requires
+// every later HTTP request in that session to carry it; a modern request
+// declares its own version per message and does not use this.
+let negotiatedVersion = null;
+
+// Header values must be header-safe ASCII. The spec wraps anything else in a
+// base64 sentinel, which is what our server decodes on the way in.
+function headerValue(raw) {
+  const value = String(raw);
+  if (/^[\x20-\x7E]+$/.test(value)) return value;
+  return `=?base64?${Buffer.from(value, 'utf8').toString('base64')}?=`;
+}
+
+// The routing envelope for one message: what the body declares, mirrored into
+// headers. A modern request (protocol version in params._meta) must match on
+// every field the server checks; a legacy one carries the negotiated version.
+function routingHeaders(message) {
+  const headers = {};
+  const params = (message && typeof message.params === 'object' && message.params) || {};
+  const meta = (params._meta && typeof params._meta === 'object') ? params._meta : {};
+  const modernVersion = typeof meta[META_PROTOCOL_VERSION] === 'string' ? meta[META_PROTOCOL_VERSION] : '';
+  if (modernVersion) {
+    headers['MCP-Protocol-Version'] = modernVersion;
+    headers['Mcp-Method'] = message.method;
+    // Required for the methods that name a thing; harmless where the server
+    // does not check it, and missing it is a rejection where it does.
+    if (typeof params.name === 'string') headers['Mcp-Name'] = headerValue(params.name);
+    else if (typeof params.uri === 'string') headers['Mcp-Name'] = headerValue(params.uri);
+  } else if (negotiatedVersion) {
+    headers['MCP-Protocol-Version'] = negotiatedVersion;
+  }
+  return headers;
 }
 
 async function forward(message) {
@@ -87,7 +141,8 @@ async function forward(message) {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json, text/event-stream',
-        'User-Agent': 'smklog-parcel-shipping-rates-mcp/1.4.0 (stdio bridge)'
+        'User-Agent': 'smklog-parcel-shipping-rates-mcp/1.4.0 (stdio bridge)',
+        ...routingHeaders(message)
       },
       body: JSON.stringify(message),
       signal: controller.signal
@@ -138,6 +193,11 @@ async function handle(line) {
   try { parsed = upstream.text ? JSON.parse(upstream.text) : null; } catch { parsed = null; }
   if (parsed && typeof parsed === 'object' && ('result' in parsed || 'error' in parsed)) {
     if (parsed.id === undefined) parsed.id = message.id;
+    // Remember what initialize settled on, so later legacy requests carry it.
+    if (message.method === 'initialize' && parsed.result && typeof parsed.result.protocolVersion === 'string') {
+      negotiatedVersion = parsed.result.protocolVersion;
+      log('negotiated', negotiatedVersion);
+    }
     write(parsed);
     return;
   }
