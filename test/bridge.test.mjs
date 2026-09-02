@@ -6,6 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
+import { createServer } from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -60,6 +61,14 @@ test('online: handshake, tool catalog and a read-only tool call reach the endpoi
     const index = await c.request('tools/call', { name: 'get_price_index', arguments: {} }, 90000);
     assert.ok(index.result, `get_price_index answered: ${JSON.stringify(index.error || '')}`);
     assert.ok(Array.isArray(index.result.content) && index.result.content.length > 0);
+    // The 2026-07-28 era: the live server rejects a request whose headers do
+    // not mirror its body, so this fails loudly if the envelope regresses.
+    const modernMeta = { 'io.modelcontextprotocol/protocolVersion': '2026-07-28' };
+    const discover = await c.request('server/discover', { _meta: modernMeta }, 30000);
+    assert.ok(discover.result, `server/discover answered: ${JSON.stringify(discover.error || '')}`);
+    assert.deepEqual(discover.result.supportedVersions, ['2026-07-28']);
+    const modernCall = await c.request('tools/call', { name: 'get_price_index', arguments: {}, _meta: modernMeta }, 90000);
+    assert.ok(modernCall.result, `modern tools/call answered: ${JSON.stringify(modernCall.error || '')}`);
   } finally { c.close(); }
 });
 
@@ -89,4 +98,66 @@ test('malformed input gets a JSON-RPC error instead of killing the bridge', asyn
     const codes = c.unrouted.map(m => m.error && m.error.code);
     assert.deepEqual(codes, [-32700, -32600]);
   } finally { c.close(); }
+});
+
+// A stand-in endpoint that answers every request with the headers it saw, so
+// the routing envelope can be checked without touching the live server.
+function echoServer() {
+  const seen = [];
+  const server = createServer((req, res) => {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      const message = JSON.parse(body || '{}');
+      seen.push({ headers: req.headers, message });
+      const result = message.method === 'initialize'
+        ? { protocolVersion: '2025-06-18', serverInfo: { name: 'echo', version: '0' } }
+        : { echoed: true };
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ jsonrpc: '2.0', id: message.id, result }));
+    });
+  });
+  return new Promise(resolve => {
+    server.listen(0, '127.0.0.1', () => resolve({ server, seen, url: `http://127.0.0.1:${server.address().port}/mcp` }));
+  });
+}
+
+test('a modern request carries the routing envelope in HTTP headers (issue #1)', async () => {
+  const { server, seen, url } = await echoServer();
+  const c = client({ SMKLOG_MCP_URL: url });
+  try {
+    await c.request('server/discover', { _meta: { 'io.modelcontextprotocol/protocolVersion': '2026-07-28' } }, 15000);
+    assert.equal(seen[0].headers['mcp-protocol-version'], '2026-07-28');
+    assert.equal(seen[0].headers['mcp-method'], 'server/discover');
+    assert.equal(seen[0].headers['mcp-name'], undefined, 'no name to mirror on server/discover');
+
+    await c.request('tools/call', {
+      name: 'get_price_index', arguments: {},
+      _meta: { 'io.modelcontextprotocol/protocolVersion': '2026-07-28' }
+    }, 15000);
+    assert.equal(seen[1].headers['mcp-method'], 'tools/call');
+    assert.equal(seen[1].headers['mcp-name'], 'get_price_index');
+
+    // A name that is not header-safe ASCII travels in the spec's sentinel.
+    await c.request('tools/call', {
+      name: 'посылка', arguments: {},
+      _meta: { 'io.modelcontextprotocol/protocolVersion': '2026-07-28' }
+    }, 15000);
+    assert.equal(seen[2].headers['mcp-name'], `=?base64?${Buffer.from('посылка', 'utf8').toString('base64')}?=`);
+  } finally { c.close(); server.close(); }
+});
+
+test('the legacy path keeps the version initialize negotiated (issue #1)', async () => {
+  const { server, seen, url } = await echoServer();
+  const c = client({ SMKLOG_MCP_URL: url });
+  try {
+    const first = await c.request('tools/list', {}, 15000);
+    assert.ok(first.result, 'a pre-handshake request still goes through');
+    assert.equal(seen[0].headers['mcp-protocol-version'], undefined, 'nothing negotiated yet');
+
+    await c.request('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 't', version: '0' } }, 15000);
+    await c.request('tools/list', {}, 15000);
+    assert.equal(seen[2].headers['mcp-protocol-version'], '2025-06-18');
+    assert.equal(seen[2].headers['mcp-method'], undefined, 'legacy requests do not mirror the method');
+  } finally { c.close(); server.close(); }
 });

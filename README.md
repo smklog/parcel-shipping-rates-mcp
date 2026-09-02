@@ -120,7 +120,10 @@ docker run -i --rm smklog-parcel-shipping-rates-mcp
 ```
 
 The bridge forwards every JSON-RPC message to `https://quote-api.smklog.com/mcp`
-and writes the answer back, one JSON object per line. If the endpoint cannot be
+and writes the answer back, one JSON object per line. It also mirrors the
+2026-07-28 routing envelope into HTTP headers (`MCP-Protocol-Version`,
+`Mcp-Method`, `Mcp-Name`) and, on the legacy path, sends the version
+`initialize` negotiated, so both protocol eras work through it. If the endpoint cannot be
 reached it still answers `initialize` and `tools/list` from the snapshot shipped
 here (`initialize.json`, `tools.json`), so you can see what is offered; tool
 calls need the network. `npm test` drives it end to end.
