@@ -14,6 +14,8 @@
 </p>
 
 <p align="center">
+  <a href="https://glama.ai/mcp/servers/smklog/parcel-shipping-rates-mcp"><img src="https://glama.ai/mcp/servers/smklog/parcel-shipping-rates-mcp/badges/score.svg" alt="Glama score"></a>
+  <a href="https://github.com/smklog/parcel-shipping-rates-mcp/actions/workflows/test.yml"><img src="https://github.com/smklog/parcel-shipping-rates-mcp/actions/workflows/test.yml/badge.svg" alt="test"></a>
   <a href="https://smithery.ai/servers/smklog/parcel-shipping-rates"><img src="https://img.shields.io/badge/Smithery-smklog%2Fparcel--shipping--rates-a855f7" alt="Listed on Smithery"></a>
   <a href="https://registry.modelcontextprotocol.io/v0/servers?search=smklog"><img src="https://img.shields.io/badge/MCP%20registry-com.smklog%2Fparcel--shipping--rates-1f6feb" alt="In the official MCP registry"></a>
   <a href="https://github.com/smklog/parcel-shipping-rates-mcp/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT license"></a>
