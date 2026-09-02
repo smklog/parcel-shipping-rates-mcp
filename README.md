@@ -93,6 +93,36 @@ adjustments. An agent cannot spend someone's money through this server.
 
 No key, no OAuth, no signup. Quoting, tracking and the price index are all open.
 
+### Over stdio
+
+For a client that only launches local commands — Claude Desktop, Cursor, an
+MCP inspector, a Docker-based runner — this repository is a thin stdio bridge
+to the same endpoint. No dependencies, no build step, no keys:
+
+```json
+{
+  "mcpServers": {
+    "smklog": {
+      "command": "npx",
+      "args": ["-y", "github:smklog/parcel-shipping-rates-mcp"]
+    }
+  }
+}
+```
+
+Or with Docker:
+
+```sh
+docker build -t smklog-parcel-shipping-rates-mcp https://github.com/smklog/parcel-shipping-rates-mcp.git
+docker run -i --rm smklog-parcel-shipping-rates-mcp
+```
+
+The bridge forwards every JSON-RPC message to `https://quote-api.smklog.com/mcp`
+and writes the answer back, one JSON object per line. If the endpoint cannot be
+reached it still answers `initialize` and `tools/list` from the snapshot shipped
+here (`initialize.json`, `tools.json`), so you can see what is offered; tool
+calls need the network. `npm test` drives it end to end.
+
 Also installable from [Smithery](https://smithery.ai/servers/smklog/parcel-shipping-rates)
 and listed in the [official MCP registry](https://registry.modelcontextprotocol.io/v0/servers?search=smklog)
 as `com.smklog/parcel-shipping-rates`.
