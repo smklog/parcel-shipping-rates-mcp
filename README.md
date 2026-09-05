@@ -51,7 +51,7 @@ when you poll it.
 
 | Tool | What it does |
 |---|---|
-| **`get_parcel_quote`** | Live rates for one parcel from a US origin, domestic or to Canada, the UK, Germany or Australia, across USPS, UPS and FedEx, plus DHL Express to Germany and Australia. Plain-words description → estimated packed box; or pass exact dimensions and weight to skip the estimate. Returns up to five purchasable services with the checkout total, the carrier cost beneath it, and the delivery window. |
+| **`get_parcel_quote`** | Live rates for one parcel from a US origin, domestic or to Canada, the UK, Germany or Australia, across USPS, UPS and FedEx, plus DHL Express to Germany and Australia. Plain-words description → estimated packed box; or pass exact dimensions and weight to skip the estimate. Returns up to five purchasable services with the checkout total (SMKlog fee inside), the carrier's counter price beside it where one is published, and the delivery window. |
 | **`create_checkout_link`** | Prices the shipment and returns a payment session: the amount, a handoff URL that opens the SMKlog checkout prefilled with this shipment, and a `session_id`. The human confirms the contents certification and the carrier-adjustment consent there and pays on Stripe. |
 | **`get_checkout_status`** | Where a payment session stands: `awaiting_checkout`, `checkout_started`, `paid`, `label_ready` (with the tracking number), `delivered` or `refunded`. Read from the order record, so it costs no carrier call and never carries names, addresses or emails. Sessions answer for 30 days. |
 | **`track_parcel`** | Delivery status, scan events and the carrier's estimated delivery date for a shipment whose label was bought on smklog.com. Not a universal tracker for arbitrary numbers. |
@@ -68,9 +68,10 @@ silently degrading.
 that starts somewhere else is out of scope, and the server will tell you instead
 of inventing a number.
 
-**Prices are checkout totals with the SMKlog fee inside**, and the carrier cost
-comes back as its own field. Show whichever one the conversation needs — but the
-total is what the person pays.
+**Prices are checkout totals with the SMKlog fee inside.** The fee is itemized
+only on the checkout receipt; what comes back beside a rate is the carrier's own
+counter price for the same parcel, where one is published — what the person
+would pay walking into the carrier's counter instead. The total is what they pay.
 
 **Oversized, palletized and multi-piece freight is priced by a person.** Declare
 the `io.modelcontextprotocol/tasks` extension and `get_parcel_quote` returns a

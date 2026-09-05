@@ -1,6 +1,6 @@
 {
   "name": "@smklog/parcel-shipping-rates-mcp",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Live USPS, UPS, FedEx and DHL Express parcel rates from a US origin, from a plain-words item description. Stdio bridge to the hosted SMKlog MCP endpoint; no API key.",
   "type": "module",
   "bin": {
