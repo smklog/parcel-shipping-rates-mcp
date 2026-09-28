@@ -29,8 +29,9 @@ takes the thing.
 
 Describe **"a full-size acoustic guitar in its hard case"** and it estimates the
 packed carton, prices it live across three carriers, and hands back services you
-can actually buy — with the checkout total and the carrier's own cost side by
-side, so you can always show a person both numbers.
+can actually buy — with the checkout total and, where the carrier publishes one,
+its own counter price for the same parcel side by side, so you can always show a
+person both numbers.
 
 ## What you can ask your assistant
 
@@ -41,11 +42,6 @@ side, so you can always show a person both numbers.
 - *"Where is my package? Tracking 9400111899561234567890."*
 - *"Did they pay for that label yet? Here is the session id you gave me."*
 - *"What has a 5 lb box to Denver cost over the last few months?"*
-- *"I have a pallet of ceramic tile going from Hoboken to Miami — can you get me a quote?"*
-
-That last one is not a parcel, and the server says so rather than guessing: it
-returns a task handle, a person prices the freight, and the answer comes back
-when you poll it.
 
 ## Tools
 
@@ -73,9 +69,13 @@ only on the checkout receipt; what comes back beside a rate is the carrier's own
 counter price for the same parcel, where one is published — what the person
 would pay walking into the carrier's counter instead. The total is what they pay.
 
-**Oversized, palletized and multi-piece freight is priced by a person.** Declare
-the `io.modelcontextprotocol/tasks` extension and `get_parcel_quote` returns a
-task handle for those; poll it with `tasks/get`.
+**Parcels only, one label per box.** A shipment past parcel limits or described
+as a pallet or freight load comes back as `mode: not_a_parcel` with no rates:
+SMKlog sells parcel labels and does not arrange pallet or freight shipments.
+`quantity` counts units of the item: units that fit one box are priced as that
+box, while units that need more than one box — or a `quantity` above 1 sent with
+exact dimensions, which describe one box — come back as `mode: multiple_boxes`
+with no rates, so quote each box on its own.
 
 **Nothing here buys a label on its own.** `create_checkout_link` produces a URL;
 a human completes the purchase, certifies the contents and consents to carrier
