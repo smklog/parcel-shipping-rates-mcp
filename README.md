@@ -143,4 +143,6 @@ Other ways in, if MCP is not your transport:
 
 [SMKlog](https://smklog.com) sells US shipping labels. The same pricing pipeline
 that answers this server answers the website — there is no separate "API rate".
+People who are not using an assistant price and buy the same labels in the
+[shipping calculator](https://smklog.com/assets/calculator).
 Questions, bugs and odd results: **info@smklog.com**.
