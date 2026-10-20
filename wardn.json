@@ -1,0 +1,12 @@
+{
+  "$schema": "https://wardn.ai/schemas/wardn.json",
+  "servers": {
+    "com.smklog/parcel-shipping-rates": {
+      "owners": [
+        {
+          "userId": "bc9c8b54-e46a-40b3-b800-3a45390a2329"
+        }
+      ]
+    }
+  }
+}
