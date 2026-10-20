@@ -129,6 +129,55 @@ reached it still answers `initialize` and `tools/list` from the snapshot shipped
 here (`initialize.json`, `tools.json`), so you can see what is offered; tool
 calls need the network. `npm test` drives it end to end.
 
+### Configuration
+
+The bridge reads three optional environment variables and nothing else:
+
+| Variable | Default | What it does |
+| --- | --- | --- |
+| `SMKLOG_MCP_URL` | `https://quote-api.smklog.com/mcp` | Endpoint the bridge forwards to. |
+| `SMKLOG_MCP_TIMEOUT_MS` | `90000` (minimum `1000`) | Per-request timeout. A quote is a live carrier call and can take half a minute. |
+| `SMKLOG_MCP_DEBUG` | unset | `1` writes traffic summaries to stderr; stdout stays clean JSON-RPC. |
+
+```json
+{
+  "mcpServers": {
+    "smklog": {
+      "command": "npx",
+      "args": ["-y", "github:smklog/parcel-shipping-rates-mcp"],
+      "env": { "SMKLOG_MCP_TIMEOUT_MS": "120000" }
+    }
+  }
+}
+```
+
+### Secrets and keys
+
+There are none to configure. The server takes no API key, token or account,
+and the bridge reads no credentials. Do not put carrier, payment or other API
+keys into the client config for this server: nothing reads them, and a config
+file is the wrong place to keep a secret. Carrier and payment credentials live
+only on the server side.
+
+### Data and privacy
+
+- Quote tools take an item description, postal codes and, optionally, box size
+  and weight. They never ask for street addresses, names, emails or phone
+  numbers. Names, addresses and payment are entered by the person on the
+  smklog.com checkout, not through this server.
+- The description and the box are used to price the parcel with the carriers.
+  A recognized item is kept in our product catalog so the next quote for the
+  same item comes out the same.
+- Each tool call is logged for 30 days: the tool, the item description, the
+  first three characters of each postal code, the destination country, the
+  client software family, the request's country and the outcome. No IP
+  address, full user agent, street address or contact details are stored for
+  this.
+- Rate limits count requests in hourly windows keyed by a one-way SHA-256 hash
+  of the connecting IP (and of IP plus user agent); the address itself is not
+  written.
+- Full policy: <https://smklog.com/privacy>.
+
 Also installable from [Smithery](https://smithery.ai/servers/smklog/parcel-shipping-rates)
 and listed in the [official MCP registry](https://registry.modelcontextprotocol.io/v0/servers?search=smklog)
 as `com.smklog/parcel-shipping-rates`.
@@ -146,3 +195,4 @@ that answers this server answers the website — there is no separate "API rate"
 People who are not using an assistant price and buy the same labels in the
 [shipping calculator](https://smklog.com/assets/calculator).
 Questions, bugs and odd results: **info@smklog.com**.
+Security reports: see [SECURITY.md](SECURITY.md). Changes: [CHANGELOG.md](CHANGELOG.md).
