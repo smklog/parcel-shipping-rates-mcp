@@ -179,7 +179,7 @@ only on the server side.
   written.
 - Full policy: <https://smklog.com/privacy>.
 
-Also installable from [Smithery](https://smithery.ai/servers/smklog/parcel-shipping-rates)
+Listed on [Smithery](https://smithery.ai/servers/smklog/parcel-shipping-rates)
 and listed in the [official MCP registry](https://registry.modelcontextprotocol.io/v0/servers?search=smklog)
 as `com.smklog/parcel-shipping-rates`.
 
