@@ -22,6 +22,10 @@
   <a href="https://allmcps.com/mcp/smklog-parcel-shipping-rates?verify=b0409145-525e-4c05-85d7-663b844f136e"><img src="https://allmcps.com/api/badge/smklog-parcel-shipping-rates" alt="AllMCPs Verified"></a>
 </p>
 
+<p align="center">
+  <a href="https://apis.io/providers/smklog-com/"><img src="https://apis.io/badge/smklog-com/card.svg" width="340" height="120" alt="SMKlog on APIs.io: Kin Score by API Evangelist"></a>
+</p>
+
 ---
 
 Most shipping APIs want a box: length, width, height, weight. People don't have
