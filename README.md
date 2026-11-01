@@ -183,7 +183,7 @@ only on the server side.
   written.
 - Full policy: <https://smklog.com/privacy>.
 
-Rated **Exemplar** on [APIs.io](https://apis.io/providers/smklog-com/) (Kin Score by API Evangelist): 95.9/100, first of 36,405 rated providers and one of 705 in the Exemplar band, about the top 2% (as of November 1, 2026; the card above shows the live score).
+Rated **Exemplar** on [APIs.io](https://apis.io/providers/smklog-com/) (Kin Score by [Kin Lane](https://apievangelist.com/about/), the API Evangelist): 95.9/100, first of 36,405 rated providers and one of 705 in the Exemplar band, about the top 2% (as of November 1, 2026; the card above shows the live score).
 
 Listed on [Smithery](https://smithery.ai/servers/smklog/parcel-shipping-rates)
 and listed in the [official MCP registry](https://registry.modelcontextprotocol.io/v0/servers?search=smklog)
