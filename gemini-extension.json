@@ -1,7 +1,7 @@
 {
   "name": "smklog-parcel-shipping-rates",
-  "version": "1.4.0",
-  "description": "Live USPS, UPS, FedEx and DHL parcel rates from the US (domestic, Canada, UK, Germany, Australia) from a plain-words item description, plus checkout links, checkout status and tracking. No API key.",
+  "version": "1.5.0",
+  "description": "Live USPS, UPS, FedEx and DHL parcel rates from the US (domestic, Canada, UK, Germany, Australia) from a plain-words item description, plus checkout links, checkout and refund status, tracking, billable weight, holiday send-by dates and shipping restrictions. No API key.",
   "mcpServers": {
     "smklog-parcel-shipping-rates": {
       "httpUrl": "https://quote-api.smklog.com/mcp",

@@ -66,7 +66,7 @@ function rpcError(id, code, message, data) {
 }
 
 // Discovery answers used only when the endpoint is unreachable. They mirror
-// what the live server returns for the same methods (a snapshot of 1.4.0).
+// what the live server returns for the same methods (a snapshot of 1.5.0).
 function offlineAnswer(message, reason) {
   const { id, method, params } = message;
   if (method === 'initialize') {

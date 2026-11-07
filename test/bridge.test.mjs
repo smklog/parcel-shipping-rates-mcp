@@ -11,7 +11,11 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const BIN = join(dirname(fileURLToPath(import.meta.url)), '..', 'bin', 'smklog-parcel-shipping-rates-mcp.mjs');
-const EXPECTED_TOOLS = ['get_parcel_quote', 'create_checkout_link', 'track_parcel', 'get_price_index', 'get_checkout_status'];
+const EXPECTED_TOOLS = [
+  'get_parcel_quote', 'create_checkout_link', 'track_parcel', 'get_price_index', 'get_checkout_status',
+  'get_refund_status', 'cancel_checkout_link', 'calculate_billable_weight', 'get_holiday_shipping_deadlines',
+  'get_shipping_restrictions'
+];
 
 function client(env = {}) {
   const child = spawn(process.execPath, [BIN], { stdio: ['pipe', 'pipe', 'pipe'], env: { ...process.env, ...env } });
@@ -77,7 +81,7 @@ test('offline: discovery is answered from the snapshots, tool calls say why they
   try {
     const init = await c.request('initialize', { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'bridge-test', version: '0.0.0' } }, 15000);
     assert.equal(init.result.protocolVersion, '2025-03-26', 'a supported legacy version is echoed');
-    assert.equal(init.result.serverInfo.version, '1.4.0');
+    assert.equal(init.result.serverInfo.version, '1.5.0');
     const list = await c.request('tools/list', {}, 15000);
     assert.deepEqual(list.result.tools.map(t => t.name).sort(), [...EXPECTED_TOOLS].sort());
     const resources = await c.request('resources/list', {}, 15000);

@@ -6,6 +6,18 @@ number moves when only this bridge, its snapshots or its documentation change.
 The hosted endpoint is updated in place, so a client always talks to the
 current server whatever version of the bridge it runs.
 
+## 2026-11-07 — 1.5.0
+
+- The hosted server is 1.5.0, with five more tools: `get_refund_status`,
+  `cancel_checkout_link`, `calculate_billable_weight`,
+  `get_holiday_shipping_deadlines` and `get_shipping_restrictions`. None of
+  them calls a carrier or spends quote allowance.
+- Every tool description is at most 1024 characters and ends with a
+  "Parameter rules:" block.
+- Snapshots (`initialize.json`, `tools.json`, `server-card.json`) re-taken from
+  the live server; the bridge test expects the ten tools.
+- README, `GEMINI.md` and `gemini-extension.json` describe the new tools.
+
 ## 2026-10-20 — documentation, no version change
 
 - `SECURITY.md`: how to report a vulnerability, scope, supported versions.

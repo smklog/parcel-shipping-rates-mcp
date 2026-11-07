@@ -47,6 +47,10 @@ person both numbers.
 - *"Where is my package? Tracking 9400111899561234567890."*
 - *"Did they pay for that label yet? Here is the session id you gave me."*
 - *"What has a 5 lb box to Denver cost over the last few months?"*
+- *"Why would a 24 × 18 × 18 in box at 6 lb cost so much to ship?"*
+- *"When is the last day to mail a gift by USPS for Christmas?"*
+- *"Can I ship a power bank?"*
+- *"Was that label refunded?"*
 
 ## Tools
 
@@ -57,6 +61,11 @@ person both numbers.
 | **`get_checkout_status`** | Where a payment session stands: `awaiting_checkout`, `checkout_started`, `paid`, `label_ready` (with the tracking number), `delivered` or `refunded`. Read from the order record, so it costs no carrier call and never carries names, addresses or emails. Sessions answer for 30 days. |
 | **`track_parcel`** | Delivery status, scan events and the carrier's estimated delivery date for a shipment whose label was bought on smklog.com. Not a universal tracker for arbitrary numbers. |
 | **`get_price_index`** | The monthly SMKlog parcel price index: six common boxes (1–20 lb) from Newark, NJ to five US cities, repriced through the same live pipeline that prices real shipments. Reading it spends no quote allowance. |
+| **`get_refund_status`** | Whether the payment behind a checkout session was refunded, how much and why: `not_paid`, `none`, `requested`, `under_review`, `declined`, `partially_refunded` or `refunded`. Unused USPS labels are refunded automatically; this tool only reads and never starts a refund. |
+| **`cancel_checkout_link`** | Cancels a checkout session the human has not opened yet, so its link stops binding a checkout. Nothing has been paid at that stage, so nothing is refunded; once the human opens checkout the call is refused with `session_in_checkout` and the checkout stands. |
+| **`calculate_billable_weight`** | The weight USPS, UPS and FedEx bill for a box: dimensional weight (L × W × H ÷ 139) against actual weight, rounded as each carrier rounds, and the parcel limits it meets. A calculation only: no carrier call, no quote allowance. |
+| **`get_holiday_shipping_deadlines`** | The carriers' own send-by dates for delivery by the 2026 winter holidays (USPS by Dec 25, FedEx by Dec 24), each marked `on_track` or `too_late` for today, with the page each date was read from. UPS publishes no fixed dates. Never a guarantee. |
+| **`get_shipping_restrictions`** | What SMKlog will not ship and what ships only with conditions, including the lithium battery rules the checkout applies. A policy reference, not a verdict on one item: the quote and the checkout check each item by name. |
 
 ## Things worth knowing before you wire it in
 
@@ -99,7 +108,7 @@ adjustments. An agent cannot spend someone's money through this server.
 }
 ```
 
-No key, no OAuth, no signup. Quoting, tracking and the price index are all open.
+No key, no OAuth, no signup. All ten tools are open.
 
 ### Over stdio
 
