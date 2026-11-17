@@ -16,7 +16,6 @@
 <p align="center">
   <a href="https://glama.ai/mcp/servers/smklog/parcel-shipping-rates-mcp"><img src="https://glama.ai/mcp/servers/smklog/parcel-shipping-rates-mcp/badges/score.svg" alt="Glama score"></a>
   <a href="https://github.com/smklog/parcel-shipping-rates-mcp/actions/workflows/test.yml"><img src="https://github.com/smklog/parcel-shipping-rates-mcp/actions/workflows/test.yml/badge.svg" alt="test"></a>
-  <a href="https://smithery.ai/servers/smklog/parcel-shipping-rates"><img src="https://img.shields.io/badge/Smithery-smklog%2Fparcel--shipping--rates-a855f7" alt="Listed on Smithery"></a>
   <a href="https://registry.modelcontextprotocol.io/v0/servers?search=smklog"><img src="https://img.shields.io/badge/MCP%20registry-com.smklog%2Fparcel--shipping--rates-1f6feb" alt="In the official MCP registry"></a>
   <a href="https://github.com/smklog/parcel-shipping-rates-mcp/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT license"></a>
   <a href="https://allmcps.com/mcp/smklog-parcel-shipping-rates?verify=b0409145-525e-4c05-85d7-663b844f136e"><img src="https://allmcps.com/api/badge/smklog-parcel-shipping-rates" alt="AllMCPs Verified"></a>
@@ -194,8 +193,7 @@ only on the server side.
 
 Rated **Exemplar** on [APIs.io](https://apis.io/providers/smklog-com/) (Kin Score by [Kin Lane](https://apievangelist.com/about/), the API Evangelist): 95.9/100, first of 36,405 rated providers and one of 705 in the Exemplar band, about the top 2% (as of November 1, 2026; the card above shows the live score).
 
-Listed on [Smithery](https://smithery.ai/servers/smklog/parcel-shipping-rates)
-and listed in the [official MCP registry](https://registry.modelcontextprotocol.io/v0/servers?search=smklog)
+Listed in the [official MCP registry](https://registry.modelcontextprotocol.io/v0/servers?search=smklog)
 as `com.smklog/parcel-shipping-rates`.
 
 Other ways in, if MCP is not your transport:
